@@ -1,6 +1,6 @@
 # 0015 — How Core installs `lantea`, and how its global flags combine
 
-**Status:** Proposed · **Date:** 2026-10-09
+**Status:** Accepted · **Date:** 2026-10-09
 
 ## Context
 
