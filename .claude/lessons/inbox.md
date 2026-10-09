@@ -20,3 +20,6 @@ exp      harvested into the harness ledger on that date (keep it when the count 
          nudge /aih:distill; universal/stack/domain lines wait for the harvest.
 -->
 
+- 2026-10-09 | project | x3 | src:self | WHEN an aarch64 VM test on lantea-bench hangs or logs "synchronous external abort"/MACHINE_CHECK taint → rerun it and compare a minimal runNixOSTest control before debugging the module (host nested KVM is flaky) | ref:docs/tasks/001-phase-0-foundation.md | st:new
+- 2026-10-09 | stack:nix | x1 | src:self | WHEN running a long `nix build -L` in the background → write the full log to a file, never pipe it through `grep | tail`, so a hung VM stays visible | ref:docs/tasks/001-phase-0-foundation.md | st:new
+- 2026-10-09 | stack:nix | x1 | src:self | WHEN a NixOS module sets several options under one top-level key (security.*, users.*, system.*) → group them in one attribute set; statix rejects repeated keys | ref:modules/core/discipline/default.nix | st:new

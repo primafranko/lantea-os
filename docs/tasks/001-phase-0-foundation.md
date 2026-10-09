@@ -110,5 +110,15 @@ Manual check — Primož boots the VM once (`QEMU_OPTS=-nographic ./result/bin/r
 - A static (musl) build of `lantea` — the brief asks for a single static binary; a later task.
 - A LICENSE file — ask Primož.
 - aarch64 runners in CI.
+- A positive run0 test for the Keeper (the Keeper can elevate, so polkit and run0 do not refuse everyone) — follow-up for Phase 6, from the review of this task.
 
 ## Implementer notes
+- 2026-10-09 (implementer): **Formatter.** `pkgs.nixfmt` (nixfmt 1.5.0, RFC style) is the official attribute in 26.05; no rename was needed.
+- **os-release.** NixOS 26.05 expresses it exactly. `system.nixos.distroId = mkDefault "lantea"` and `distroName = mkDefault "Lantea OS"` give `ID=lantea` and `NAME="Lantea OS"`. NixOS adds `ID_LIKE=nixos` itself whenever the ID is not `nixos`. After Primož's review, the version keys name the edition (`PRETTY_NAME="Lantea OS 1.0 (Harbour)"`, `VERSION_ID="1.0"`, `VERSION_CODENAME=harbour`); `BUILD_ID` stays NixOS's and `LANTEA_BASE="NixOS 26.05 (Yarara)"` is added — decision 0016. `CPE_NAME` keeps NixOS's form, `cpe:/o:nixos:nixos:26.05`, for vulnerability scanners. Side effect: `DEFAULT_HOSTNAME=lantea`.
+- **polkit.** `security.polkit.adminIdentities = mkDefault [ "unix-group:wheel" ]` is set explicitly, although it equals the nixpkgs default, so the provenance is Lantea's.
+- **The `lantea` package in the module.** The discipline Strand builds `lantea` with `pkgs.callPackage ../../../pkgs/lantea { }`. There is no `lantea.package` option and no overlay. Decision 0015 (Proposed) records this choice.
+- **CLI flags.** `--explain` wins over `--json` when both are given. `--yes` is accepted and ignored because nothing needs confirming yet. Decision 0015 records this too. A bare `lantea` uses clap's `arg_required_else_help`: help (including `Usage:`) goes to stderr, with exit code 2.
+- **vm-dev.** The host imports `qemu-vm.nix` directly. The host is then itself a VM configuration: `fileSystems` and the boot loader come from qemu-vm, so `toplevel` evaluates and `build-vm` works. `graphics = false` gives the serial console. The Steward autologin and the Keeper's `initialPassword = "keeper"` exist only in `hosts/vm-dev`.
+- **`.gitignore`.** Unchanged: `result`, `*.qcow2` and `target/` were already covered.
+- **No LICENSE.** `pkgs/lantea` has no `meta.license`, because the licence is not decided.
+- **Intermittent guest crashes on the build machine.** Three early aarch64 boots died soon after start: two runs of `checks.aarch64-linux.discipline`, and one of the dev VM. A minimal control `runNixOSTest` with no Lantea modules died the same way. In each case the guest kernel logged "Internal error: synchronous external abort: 0000000096000010", Oopsed, and was tainted `[M]=MACHINE_CHECK`. Later runs were clean: `aih verify` (all subtests passed), the success check, and a dev-VM boot that reached the Steward's shell. The cause looks like nested KVM on the host (UTM on Apple M4), not Lantea. Expect occasional hung or crashed VM tests on `lantea-bench`; rerun before debugging the module.

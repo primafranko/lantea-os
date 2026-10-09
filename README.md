@@ -6,7 +6,7 @@ Lantea is not a fork and not a theme. Every Lantea term maps to a real Linux or 
 
 ## Status
 
-Phase 0 — Foundation: not started. Edition 1.0 *Harbour* is in development.
+Phase 0 — Foundation: done (build machine: aarch64; CI: x86_64). Edition 1.0 *Harbour* is in development.
 
 ## Read first
 
