@@ -44,6 +44,37 @@
           "timeout": 5400
         }
       }
+    },
+    {
+      "name": "rust",
+      "root": "pkgs/lantea",
+      "files": [
+        "pkgs/lantea/**/*.rs",
+        "pkgs/lantea/**/Cargo.toml",
+        "pkgs/lantea/Cargo.lock"
+      ],
+      "commands": {
+        "format": {
+          "run": "nix develop -c cargo fmt --all",
+          "scope": "package",
+          "timeout": 120
+        },
+        "format.check": {
+          "run": "nix develop -c cargo fmt --all -- --check",
+          "scope": "package",
+          "timeout": 180
+        },
+        "lint": {
+          "run": "nix develop -c cargo clippy --workspace --all-targets --locked -- -D warnings",
+          "scope": "package",
+          "timeout": 900
+        },
+        "test": {
+          "run": "nix develop -c cargo test --workspace --locked",
+          "scope": "package",
+          "timeout": 900
+        }
+      }
     }
   ],
   "phases": {
@@ -52,11 +83,13 @@
     ],
     "stop": [
       "lint",
-      "check.stop"
+      "check.stop",
+      "test"
     ],
     "verify": [
       "format.check",
       "lint",
+      "test",
       "check"
     ]
   },

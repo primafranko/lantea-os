@@ -1,0 +1,15 @@
+[package]
+name = "lantea"
+description = "The lantea command: plain-language access to a Lantea OS system"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[[bin]]
+name = "lantea"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

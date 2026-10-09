@@ -18,3 +18,5 @@ One file per decision; see [0001](0001-record-architecture-decisions.md) for the
 | [0012](0012-architectures.md) | x86_64 and aarch64 from Phase 0 | Accepted |
 | [0013](0013-build-machine.md) | Development happens on lantea-bench, as an unprivileged user | Accepted |
 | [0014](0014-impermanence-ready-layout.md) | Take a blank @root snapshot at install | Proposed |
+| [0015](0015-lantea-package-and-cli-flags.md) | How Core installs `lantea`, and how its global flags combine | Proposed |
+| [0016](0016-os-release-names-the-edition.md) | os-release names the Lantea edition; the NixOS base stays visible | Accepted |
