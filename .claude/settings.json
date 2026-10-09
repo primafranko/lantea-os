@@ -1,0 +1,17 @@
+{
+  "enabledPlugins": {
+    "aih@aiharness": true
+  },
+  "permissions": {
+    "deny": [
+      "Read(./**/.env)",
+      "Read(./**/.env.local)",
+      "Read(./**/.env.production)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)"
+    ],
+    "ask": [
+      "Bash(git push:*)"
+    ]
+  }
+}

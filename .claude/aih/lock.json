@@ -1,0 +1,15 @@
+{
+  "harness_version": "2.0.0",
+  "synced_at": "2026-10-09T10:40:38.554Z",
+  "packs": [
+    "nix",
+    "rust"
+  ],
+  "domains": [],
+  "files": {
+    ".claude/rules/aih-core.md": "b13aae67006a223e4faf523ad46b5510fb68437830e961e8101ca8cef6d8c980",
+    ".claude/rules/aih-migrations.md": "2b3fa62ffff1013a972f27525e80fc4d9bddb8aa93e5cc3993862edf01d16c0e",
+    "docs/spec/SPEC.template.md": "58caf7db6a86ff989d95576dd8f2b5efd8aa71f10ff6c3252e14e56df3709218",
+    "docs/tasks/TASK_SPEC.template.md": "be0aeb0b71672e15855fc56e5c28e09e5919a9c17c79a517239438a8da6b6822"
+  }
+}
