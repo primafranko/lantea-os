@@ -1,0 +1,18 @@
+# Nix build outputs
+result
+result-*
+
+# VM disk images created by ./result/bin/run-*-vm
+*.qcow2
+
+# Rust
+target/
+
+# direnv
+.direnv/
+
+# AiHarness runtime state (aih init adds these too)
+.claude/aih/state/
+.claude/settings.local.json
+.claude/worktrees/
+*.aih-new

@@ -1,0 +1,136 @@
+{
+  "version": 2,
+  "packs": [
+    "nix",
+    "rust"
+  ],
+  "domains": [],
+  "auto_sync": true,
+  "shell": "bash",
+  "packages": [
+    {
+      "name": "nix",
+      "root": ".",
+      "files": [
+        "**/*.nix",
+        "flake.lock",
+        "!result/**",
+        "!result-*/**"
+      ],
+      "commands": {
+        "format": {
+          "run": "nix fmt -- {files}",
+          "scope": "files",
+          "timeout": 120
+        },
+        "format.check": {
+          "run": "git ls-files -co --exclude-standard -z -- '*.nix' | xargs -0 -r nix fmt -- --check",
+          "scope": "package",
+          "timeout": 300
+        },
+        "lint": {
+          "run": "nix develop -c bash -c 'statix check . && deadnix --fail .'",
+          "scope": "package",
+          "timeout": 300
+        },
+        "check.stop": {
+          "run": "nix flake check --no-build",
+          "scope": "package",
+          "timeout": 600
+        },
+        "check": {
+          "run": "nix flake check -L",
+          "scope": "package",
+          "timeout": 5400
+        }
+      }
+    }
+  ],
+  "phases": {
+    "edit": [
+      "format"
+    ],
+    "stop": [
+      "lint",
+      "check.stop"
+    ],
+    "verify": [
+      "format.check",
+      "lint",
+      "check"
+    ]
+  },
+  "stop": {
+    "trigger": [
+      "**/*",
+      "!**/*.md",
+      "!docs/**",
+      "!.claude/**"
+    ],
+    "max_blocks": 3,
+    "on_timeout": "warn"
+  },
+  "guard": {
+    "protected_branches": [
+      "main",
+      "master",
+      "release/*"
+    ],
+    "deny": [
+      {
+        "pattern": "(?:^|[;&|(\\x60]|\\$\\(|\\bxargs\\s+(?:-\\S+\\s+)*|\\b(?:ba|z|da|fi)?sh\\s+(?:-\\S+\\s+)*-c\\s+['\"]?|\\bnix\\s+(?:develop|shell)\\b[^;&|]*?\\s(?:-c|--command)\\s+['\"]?|\\bnix-shell\\b[^;&|]*?\\s--run\\s+['\"]?)\\s*(?:(?:[\\w.~/-]*/)?(?:sudo|doas|env|exec|command|nohup|time|nice)\\s+(?:-\\S+\\s+)*(?:\\w+=\\S*\\s+)*)*(?:[\\w.~/-]*/)?(?:sudo|doas|run0|pkexec|su)\\b",
+        "reason": "The agent never needs root on the build machine. System changes are made by Primož as primoz; anything that needs root is tested inside a VM."
+      },
+      {
+        "pattern": "(?:^|[;&|(\\x60]|\\$\\(|\\bxargs\\s+(?:-\\S+\\s+)*|\\b(?:ba|z|da|fi)?sh\\s+(?:-\\S+\\s+)*-c\\s+['\"]?|\\bnix\\s+(?:develop|shell)\\b[^;&|]*?\\s(?:-c|--command)\\s+['\"]?|\\bnix-shell\\b[^;&|]*?\\s--run\\s+['\"]?)\\s*(?:(?:[\\w.~/-]*/)?(?:sudo|doas|env|exec|command|nohup|time|nice)\\s+(?:-\\S+\\s+)*(?:\\w+=\\S*\\s+)*)*(?:[\\w.~/-]*/)?(?:nixos-rebuild|nixos-rebuild-ng)\\b(?=[^;&|]*\\s(?:switch|boot|test|dry-activate)\\b)",
+        "reason": "This would change the build machine itself. Use `nixos-rebuild build-vm` or a VM test instead."
+      },
+      {
+        "pattern": "(?:^|[;&|(\\x60]|\\$\\(|\\bxargs\\s+(?:-\\S+\\s+)*|\\b(?:ba|z|da|fi)?sh\\s+(?:-\\S+\\s+)*-c\\s+['\"]?|\\bnix\\s+(?:develop|shell)\\b[^;&|]*?\\s(?:-c|--command)\\s+['\"]?|\\bnix-shell\\b[^;&|]*?\\s--run\\s+['\"]?)\\s*(?:(?:[\\w.~/-]*/)?(?:sudo|doas|env|exec|command|nohup|time|nice)\\s+(?:-\\S+\\s+)*(?:\\w+=\\S*\\s+)*)*(?:[\\w.~/-]*/)?(?:switch-to-configuration|nixos-install|nixos-enter|darwin-rebuild)\\b",
+        "reason": "This would change a real system. Lantea is only ever activated inside VMs."
+      },
+      {
+        "pattern": "(?:^|[;&|(\\x60]|\\$\\(|\\bxargs\\s+(?:-\\S+\\s+)*|\\b(?:ba|z|da|fi)?sh\\s+(?:-\\S+\\s+)*-c\\s+['\"]?|\\bnix\\s+(?:develop|shell)\\b[^;&|]*?\\s(?:-c|--command)\\s+['\"]?|\\bnix-shell\\b[^;&|]*?\\s--run\\s+['\"]?)\\s*(?:(?:[\\w.~/-]*/)?(?:sudo|doas|env|exec|command|nohup|time|nice)\\s+(?:-\\S+\\s+)*(?:\\w+=\\S*\\s+)*)*(?:[\\w.~/-]*/)?(?:mkfs(?:\\.\\w+)?|wipefs|cryptsetup|sgdisk|sfdisk|gdisk|fdisk|parted|disko|disko-install)\\b",
+        "reason": "Disk tools act on real disks. Disk layouts are exercised only in VM tests (disko's test helpers)."
+      },
+      {
+        "pattern": "(?:^|[;&|(\\x60]|\\$\\(|\\bxargs\\s+(?:-\\S+\\s+)*|\\b(?:ba|z|da|fi)?sh\\s+(?:-\\S+\\s+)*-c\\s+['\"]?|\\bnix\\s+(?:develop|shell)\\b[^;&|]*?\\s(?:-c|--command)\\s+['\"]?|\\bnix-shell\\b[^;&|]*?\\s--run\\s+['\"]?)\\s*(?:(?:[\\w.~/-]*/)?(?:sudo|doas|env|exec|command|nohup|time|nice)\\s+(?:-\\S+\\s+)*(?:\\w+=\\S*\\s+)*)*(?:[\\w.~/-]*/)?nix\\s+run\\b[^;&|]*\\bdisko\\b",
+        "reason": "Running disko acts on real disks. Disk layouts are exercised only in VM tests (disko's test helpers)."
+      },
+      {
+        "pattern": "(?:^|[;&|(\\x60]|\\$\\(|\\bxargs\\s+(?:-\\S+\\s+)*|\\b(?:ba|z|da|fi)?sh\\s+(?:-\\S+\\s+)*-c\\s+['\"]?|\\bnix\\s+(?:develop|shell)\\b[^;&|]*?\\s(?:-c|--command)\\s+['\"]?|\\bnix-shell\\b[^;&|]*?\\s--run\\s+['\"]?)\\s*(?:(?:[\\w.~/-]*/)?(?:sudo|doas|env|exec|command|nohup|time|nice)\\s+(?:-\\S+\\s+)*(?:\\w+=\\S*\\s+)*)*(?:[\\w.~/-]*/)?dd\\b(?=[^;&|]*\\bof=/dev/)",
+        "reason": "Writing to a device with dd acts on a real disk. Use a VM test."
+      },
+      {
+        "pattern": "(?:^|[;&|(\\x60]|\\$\\(|\\bxargs\\s+(?:-\\S+\\s+)*|\\b(?:ba|z|da|fi)?sh\\s+(?:-\\S+\\s+)*-c\\s+['\"]?|\\bnix\\s+(?:develop|shell)\\b[^;&|]*?\\s(?:-c|--command)\\s+['\"]?|\\bnix-shell\\b[^;&|]*?\\s--run\\s+['\"]?)\\s*(?:(?:[\\w.~/-]*/)?(?:sudo|doas|env|exec|command|nohup|time|nice)\\s+(?:-\\S+\\s+)*(?:\\w+=\\S*\\s+)*)*(?:[\\w.~/-]*/)?(?:bootctl\\s+(?:install|update|remove|set-default|set-oneshot)|efibootmgr|sbctl|systemd-cryptenroll|tpm2_\\w+)\\b",
+        "reason": "Boot, Secure Boot and TPM tools act on the real machine. Test them in a VM with emulated firmware and TPM."
+      },
+      {
+        "pattern": "(?:^|[;&|(\\x60]|\\$\\(|\\bxargs\\s+(?:-\\S+\\s+)*|\\b(?:ba|z|da|fi)?sh\\s+(?:-\\S+\\s+)*-c\\s+['\"]?|\\bnix\\s+(?:develop|shell)\\b[^;&|]*?\\s(?:-c|--command)\\s+['\"]?|\\bnix-shell\\b[^;&|]*?\\s--run\\s+['\"]?)\\s*(?:(?:[\\w.~/-]*/)?(?:sudo|doas|env|exec|command|nohup|time|nice)\\s+(?:-\\S+\\s+)*(?:\\w+=\\S*\\s+)*)*(?:[\\w.~/-]*/)?(?:reboot|poweroff|shutdown|halt)\\b",
+        "reason": "Never restart or stop the build machine from a session."
+      },
+      {
+        "pattern": "(?:^|[;&|(\\x60]|\\$\\(|\\bxargs\\s+(?:-\\S+\\s+)*|\\b(?:ba|z|da|fi)?sh\\s+(?:-\\S+\\s+)*-c\\s+['\"]?|\\bnix\\s+(?:develop|shell)\\b[^;&|]*?\\s(?:-c|--command)\\s+['\"]?|\\bnix-shell\\b[^;&|]*?\\s--run\\s+['\"]?)\\s*(?:(?:[\\w.~/-]*/)?(?:sudo|doas|env|exec|command|nohup|time|nice)\\s+(?:-\\S+\\s+)*(?:\\w+=\\S*\\s+)*)*(?:[\\w.~/-]*/)?systemctl\\s+(?![^;&|]*--user\\b)(?:-\\S+\\s+)*(?:start|stop|restart|reload|enable|disable|mask|unmask|kill|isolate|daemon-reload|set-property|edit|reboot|poweroff|halt|kexec|suspend|hibernate)\\b",
+        "reason": "This changes system services on the build machine. Exercise services inside a VM test; `systemctl status` and `--user` are fine."
+      }
+    ],
+    "ask": [
+      {
+        "pattern": "(?:^|[;&|(\\x60]|\\$\\(|\\bxargs\\s+(?:-\\S+\\s+)*|\\b(?:ba|z|da|fi)?sh\\s+(?:-\\S+\\s+)*-c\\s+['\"]?|\\bnix\\s+(?:develop|shell)\\b[^;&|]*?\\s(?:-c|--command)\\s+['\"]?|\\bnix-shell\\b[^;&|]*?\\s--run\\s+['\"]?)\\s*(?:(?:[\\w.~/-]*/)?(?:sudo|doas|env|exec|command|nohup|time|nice)\\s+(?:-\\S+\\s+)*(?:\\w+=\\S*\\s+)*)*(?:[\\w.~/-]*/)?nix\\s+flake\\s+(?:update|lock\\b[^;&|]*--update-input)",
+        "reason": "Updating flake.lock changes what Lantea is built from. Only when the active task says so."
+      },
+      {
+        "pattern": "(?:^|[;&|(\\x60]|\\$\\(|\\bxargs\\s+(?:-\\S+\\s+)*|\\b(?:ba|z|da|fi)?sh\\s+(?:-\\S+\\s+)*-c\\s+['\"]?|\\bnix\\s+(?:develop|shell)\\b[^;&|]*?\\s(?:-c|--command)\\s+['\"]?|\\bnix-shell\\b[^;&|]*?\\s--run\\s+['\"]?)\\s*(?:(?:[\\w.~/-]*/)?(?:sudo|doas|env|exec|command|nohup|time|nice)\\s+(?:-\\S+\\s+)*(?:\\w+=\\S*\\s+)*)*(?:[\\w.~/-]*/)?(?:nix-collect-garbage|nix\\s+store\\s+(?:gc|delete)|nix-store\\s+--(?:gc|delete))\\b",
+        "reason": "Garbage collection deletes cached builds and makes the next build slow. Ask first."
+      },
+      {
+        "pattern": "(?:^|[;&|(\\x60]|\\$\\(|\\bxargs\\s+(?:-\\S+\\s+)*|\\b(?:ba|z|da|fi)?sh\\s+(?:-\\S+\\s+)*-c\\s+['\"]?|\\bnix\\s+(?:develop|shell)\\b[^;&|]*?\\s(?:-c|--command)\\s+['\"]?|\\bnix-shell\\b[^;&|]*?\\s--run\\s+['\"]?)\\s*(?:(?:[\\w.~/-]*/)?(?:sudo|doas|env|exec|command|nohup|time|nice)\\s+(?:-\\S+\\s+)*(?:\\w+=\\S*\\s+)*)*(?:[\\w.~/-]*/)?cargo\\s+update\\b",
+        "reason": "Updating Cargo.lock changes every dependency. Only when the active task says so."
+      },
+      {
+        "pattern": "(?:^|[;&|(\\x60]|\\$\\(|\\bxargs\\s+(?:-\\S+\\s+)*|\\b(?:ba|z|da|fi)?sh\\s+(?:-\\S+\\s+)*-c\\s+['\"]?|\\bnix\\s+(?:develop|shell)\\b[^;&|]*?\\s(?:-c|--command)\\s+['\"]?|\\bnix-shell\\b[^;&|]*?\\s--run\\s+['\"]?)\\s*(?:(?:[\\w.~/-]*/)?(?:sudo|doas|env|exec|command|nohup|time|nice)\\s+(?:-\\S+\\s+)*(?:\\w+=\\S*\\s+)*)*(?:[\\w.~/-]*/)?cargo\\s+(?:publish|yank|owner)\\b",
+        "reason": "Publishing to crates.io cannot be undone. Primož does this."
+      }
+    ]
+  }
+}

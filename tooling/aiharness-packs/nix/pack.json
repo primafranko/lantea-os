@@ -1,0 +1,110 @@
+{
+  "name": "nix",
+  "kind": "stack",
+  "description": "Nix flakes and NixOS modules: nixfmt via `nix fmt`, statix and deadnix from the flake dev shell, `nix flake check` (including NixOS VM tests)",
+  "requires": [],
+  "detect": {
+    "files_any": [
+      "flake.nix"
+    ]
+  },
+  "harness": {
+    "packages": [
+      {
+        "name": "nix",
+        "root": ".",
+        "files": [
+          "**/*.nix",
+          "flake.lock",
+          "!result/**",
+          "!result-*/**"
+        ],
+        "commands": {
+          "format": {
+            "run": "nix fmt -- {files}",
+            "scope": "files",
+            "timeout": 120,
+            "needs": {
+              "files_any": [
+                "flake.nix"
+              ]
+            }
+          },
+          "format.check": {
+            "run": "git ls-files -co --exclude-standard -z -- '*.nix' | xargs -0 -r nix fmt -- --check",
+            "scope": "package",
+            "timeout": 300,
+            "needs": {
+              "files_any": [
+                "flake.nix"
+              ]
+            }
+          },
+          "lint": {
+            "run": "nix develop -c bash -c 'statix check . && deadnix --fail .'",
+            "scope": "package",
+            "timeout": 300,
+            "needs": {
+              "files_any": [
+                "flake.nix"
+              ]
+            }
+          },
+          "check.stop": {
+            "run": "nix flake check --no-build",
+            "scope": "package",
+            "timeout": 600,
+            "needs": {
+              "files_any": [
+                "flake.nix"
+              ]
+            }
+          },
+          "check": {
+            "run": "nix flake check -L",
+            "scope": "package",
+            "timeout": 5400,
+            "needs": {
+              "files_any": [
+                "flake.nix"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "phases": {
+      "edit": [
+        "format"
+      ],
+      "stop": [
+        "lint",
+        "check.stop"
+      ],
+      "verify": [
+        "format.check",
+        "lint",
+        "check"
+      ]
+    },
+    "guard": {
+      "deny": [],
+      "ask": [
+        {
+          "pattern": "(?:^|[;&|(]|\\$\\()\\s*(?:sudo\\s+)?(?:nixos-rebuild|nixos-rebuild-ng|darwin-rebuild)\\b(?=[^;&|]*\\s(?:switch|boot|test|activate|dry-activate)\\b)",
+          "reason": "activates a configuration on this machine; build it (`build`, `build-vm`) or test it in a VM instead, or ask"
+        },
+        {
+          "pattern": "(?:^|[;&|(]|\\$\\()\\s*nix\\s+flake\\s+(?:update|lock\\b[^;&|]*--update-input)",
+          "reason": "updates flake.lock (what the project is built from); only when the spec says so"
+        },
+        {
+          "pattern": "(?:^|[;&|(]|\\$\\()\\s*(?:sudo\\s+)?(?:nix-collect-garbage|nix\\s+store\\s+(?:gc|delete)|nix-store\\s+--(?:gc|delete))\\b",
+          "reason": "deletes cached builds; the next build gets slow"
+        }
+      ]
+    }
+  },
+  "recommended_plugins": [],
+  "_note": "Tools come from the project's flake: `nix fmt` needs a `formatter.<system>` output (nixfmt; `--check` is passed through), lint needs statix and deadnix in `devShells.<system>.default`. Every command needs flake.nix at the package root. `check` runs every check including NixOS VM tests (needs KVM; can take many minutes); `check.stop` only evaluates (`--no-build`). Untracked files are invisible to flakes: `git add` new files before checking."
+}
