@@ -39,6 +39,11 @@
           "timeout": 600
         },
         "check": {
+          "run": "./tests/check-without-boot.sh",
+          "scope": "package",
+          "timeout": 3600
+        },
+        "check.vm": {
           "run": "nix flake check -L",
           "scope": "package",
           "timeout": 5400

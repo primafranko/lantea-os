@@ -20,3 +20,4 @@ One file per decision; see [0001](0001-record-architecture-decisions.md) for the
 | [0014](0014-impermanence-ready-layout.md) | Take a blank @root snapshot at install | Proposed |
 | [0015](0015-lantea-package-and-cli-flags.md) | How Core installs `lantea`, and how its global flags combine | Accepted |
 | [0016](0016-os-release-names-the-edition.md) | os-release names the Lantea edition; the NixOS base stays visible | Accepted |
+| [0019](0019-vm-tests-boot-in-ci.md) | VM tests boot in CI until lantea-bench is stable | Accepted (temporary) |
