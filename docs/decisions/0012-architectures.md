@@ -1,6 +1,6 @@
 # 0012 — x86_64 and aarch64 from Phase 0
 
-**Status:** Accepted · **Date:** 2026-10-09
+**Status:** Accepted · **Date:** 2026-10-09 · Local aarch64 testing is suspended by [0019](0019-vm-tests-boot-in-ci.md) (temporary)
 
 ## Context
 
