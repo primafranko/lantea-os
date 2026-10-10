@@ -53,6 +53,7 @@ None.
 - `docs/decisions/0021-tended-snapshots.md` (new), `docs/decisions/README.md` — index row
 - `docs/architecture.md` — `backups` row: btrbk done
 - `README.md` — Status line for Phase 1
+- `pkgs/lantea/cli/tests/held.rs`, `pkgs/lantea/cli/src/held.rs`, `docs/decisions/0018-held-ids-and-refusals.md` — the two Held items added by Primož on 2026-10-10 (below). Change `held.rs` and 0018 only if the subvolume check calls for it; 0018 is on `main`, so a change there needs a new record that supersedes it (decision 0001).
 
 ## Acceptance criteria
 - [ ] The four options exist with descriptions and the defaults above. Enabling snapshots without the layout fails evaluation, and the message names `lantea.backups.snapshots.enable` and `lantea.tendedStore.layout.enable`.
@@ -71,6 +72,17 @@ None.
 - [ ] With `lantea.backups.snapshots.enable` left at `false`, there is no `btrbk-lantea` unit (`vm-dev` unchanged).
 - [ ] Decision 0021 records the retention, the scope (`@tended` only), how btrbk reaches the volume, and the `snapshot-removed` Record action (fields, `MESSAGE_ID`, how entries are produced). `README.md` Status reads `Phase 1 — The Tended Store: done (build machine: aarch64; CI: x86_64).` in addition to the Phase 0 line.
 - [ ] `aih verify` prints `VERIFY: PASS`.
+
+**Held items added by Primož (2026-10-10)**
+- [ ] **Relative `--to` with `--explain` and `--json`.** A Rust test runs `lantea restore <id> --to <relative path>` from a working directory inside the home, once with `--explain` and once with `--json`. Both show the absolute path: the `mv` line in `--explain`, `"path"` in `--json`. Today only the plain output is tested (task 002 follow-up).
+- [ ] **Held and nested Btrfs subvolumes.** On the layout test machine (`@tended` at `/home`), check what `set-down`, `restore` and `release` do in two cases:
+  1. **An item inside a nested subvolume.** Example: `btrfs subvolume create ~/sub`, then `set-down ~/sub/a.txt`. Renaming it into the Trash, on `@tended` outside `~/sub`, fails with `EXDEV`, although both share one mount ID.
+  2. **An item that is itself a subvolume.** Example: `set-down ~/sub`. Then `restore` it, and `release` it. Without `user_subvol_rm_allowed`, the Steward may not be able to delete a subvolume.
+
+  **Decide the behaviour in this spec** before implementing, and record it in a decision that supersedes the relevant part of 0018. Every refusal leaves nothing changed, and its message says plainly why.
+  - *Suggested starting point:* refuse case 1 up front with a "separate subvolume" message. Allow case 2 for `set-down` and `restore`, which are renames. Refuse `release` of a subvolume up front, unless the deletion is known to work, so it never stops halfway.
+
+  Cover both cases in `tests/tended-store-layout.nix`.
 
 ## Test data
 - `/home/steward/kept.txt` containing `kept\n`.
