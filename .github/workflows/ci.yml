@@ -26,6 +26,17 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # The lantea package's tests make mounts inside unprivileged user
+      # namespaces (`unshare -Urm`). Ubuntu's AppArmor blocks those by
+      # default, so lift that restriction on this throwaway runner. If the
+      # namespace is still denied, those tests fail with a clear message;
+      # they never skip.
+      - name: Allow unprivileged user namespaces
+        run: |
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+
       - name: Flake checks, including VM tests
         run: nix flake check -L
 

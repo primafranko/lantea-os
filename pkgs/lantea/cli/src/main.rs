@@ -4,6 +4,13 @@
 //! real commands it would run with `--explain`. Exit codes: 0 success,
 //! 1 failed or refused, 2 usage error (clap's own exit code for bad usage).
 
+mod held;
+mod record;
+
+use std::ffi::OsString;
+use std::path::PathBuf;
+use std::process::ExitCode;
+
 use clap::{Parser, Subcommand};
 use serde::Serialize;
 
@@ -43,6 +50,26 @@ struct Cli {
 enum Command {
     /// Show the current condition of the system.
     Condition,
+    /// Set a file or directory down: move it into Held, from where it can be restored.
+    SetDown {
+        /// The file or directory to set down.
+        path: PathBuf,
+    },
+    /// List what is held.
+    Held,
+    /// Bring a held item back to where it was set down from.
+    Restore {
+        /// The held item, as `lantea held` names it.
+        id: OsString,
+        /// Restore it to this path instead.
+        #[arg(long, value_name = "PATH")]
+        to: Option<PathBuf>,
+    },
+    /// Release a held item: delete it permanently.
+    Release {
+        /// The held item, as `lantea held` names it.
+        id: OsString,
+    },
 }
 
 #[derive(Serialize)]
@@ -64,11 +91,28 @@ fn condition(cli: &Cli) {
     }
 }
 
-fn main() {
+fn main() -> ExitCode {
     let cli = Cli::parse();
-    // --yes has nothing to confirm yet; it is accepted so scripts can pass it.
-    let _ = cli.yes;
-    match cli.command {
-        Command::Condition => condition(&cli),
+    let opts = held::Opts {
+        json: cli.json,
+        explain: cli.explain,
+        yes: cli.yes,
+    };
+    let outcome = match &cli.command {
+        Command::Condition => {
+            condition(&cli);
+            Ok(())
+        }
+        Command::SetDown { path } => held::set_down(&opts, path),
+        Command::Held => held::held(&opts),
+        Command::Restore { id, to } => held::restore(&opts, id, to.as_deref()),
+        Command::Release { id } => held::release(&opts, id),
+    };
+    match outcome {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(failure) => {
+            failure.print();
+            ExitCode::FAILURE
+        }
     }
 }

@@ -70,12 +70,12 @@
           "timeout": 180
         },
         "lint": {
-          "run": "nix develop -c cargo clippy --workspace --all-targets --locked -- -D warnings",
+          "run": "nix develop -c cargo clippy --workspace --all-targets --locked --all-features -- -D warnings",
           "scope": "package",
           "timeout": 900
         },
         "test": {
-          "run": "nix develop -c cargo test --workspace --locked",
+          "run": "nix develop -c cargo test --workspace --locked --all-features",
           "scope": "package",
           "timeout": 900
         }

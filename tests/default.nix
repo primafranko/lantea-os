@@ -2,4 +2,5 @@
 { pkgs, self }:
 {
   discipline = pkgs.testers.runNixOSTest (import ./discipline.nix { inherit self; });
+  tended-store = pkgs.testers.runNixOSTest (import ./tended-store.nix { inherit self; });
 }
