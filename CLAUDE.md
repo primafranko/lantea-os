@@ -74,3 +74,4 @@ via `/aih:lesson`. Max 15; path-specific rules live in `.claude/rules/project-*.
 Line format: `- WHEN <trigger> → <rule>.` followed by `<!-- id=P-<n> n=<count> since=YYYY-MM check=<…> -->`.
 
 <!-- distilled rules below -->
+- WHEN a local VM test dies with a kernel crash ("synchronous external abort", `dc zva` in `clear_page`) → it is lantea-bench, not the module: rerun it once at most, then let CI decide (decision 0019). A failed assertion is a real failure and is debugged as usual. <!-- id=P-1 n=3 since=2026-10 check=none retire-with=0019 -->
